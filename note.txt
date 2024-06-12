@@ -1,0 +1,25 @@
+  const INIT_QUESTION = {
+    question: "",
+    answers: [
+      {
+        content: "",
+        editorState: EditorState.createEmpty(),
+        is_correct: true
+      },
+      {
+        content: "",
+        editorState: EditorState.createEmpty(),
+        is_correct: false
+      },
+      {
+        content: "",
+        editorState: EditorState.createEmpty(),
+        is_correct: false
+      },
+      {
+        content: "",
+        editorState: EditorState.createEmpty(),
+        is_correct: false
+      },
+    ]
+  }
