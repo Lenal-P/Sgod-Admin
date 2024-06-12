@@ -194,3 +194,27 @@ export type CheckPlagiarism = {
   note: string,
   student_name: string
 };
+
+export type QuizAnswer = {
+  content: string;
+  is_correct: boolean;
+}
+
+export type QuizOnlineData = {
+  _id: string;
+  quiz_store_id: string;
+  question: string;
+  level: string;
+  answers: QuizAnswer[];
+}
+
+export type QuizData = {
+  _id: string;
+  teacherId: string;
+  title: string;
+  time_per_question: number;
+  questions: QuizQuestion[];
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}

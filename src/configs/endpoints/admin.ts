@@ -69,6 +69,7 @@ export default {
   //Quiz Online
   getallQuizOnlineEndpoint: `${API_URL}/quiz-online/get-paginate`,
   deleteQuizOnlineEndpoint: `${API_URL}/quiz-online/delete`,
+  getDetailQuizOnlineEndpoint: `${API_URL}/quiz-online/get`,
 
   //Essay
   addEssayEndpoint: `${API_URL}/essay-exam/post`,

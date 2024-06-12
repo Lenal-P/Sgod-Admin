@@ -73,7 +73,7 @@ const navigation = (): VerticalNavItemsType => {
       icon: 'line-md:text-box-multiple-twotone-to-text-box-twotone-transition',
       action: 'read',
       subject: 'teacher-page',
-      path: '/apps/quiz'
+      path: '/apps/quiz/'
     },
     {
       title: 'Create Quiz',

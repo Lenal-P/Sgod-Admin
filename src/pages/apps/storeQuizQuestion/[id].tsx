@@ -27,7 +27,7 @@ import toast from 'react-hot-toast'
 import Link from 'next/link';
 import TableHeaderDetail from 'src/views/apps/storeQuizQuestion/TableHeaderDetail';
 
-export default function CoursesDetail() {
+export default function QuizQuestionStoreDetail() {
   const router = useRouter();
   const { t } = useTranslation();
   const [values, setValues] = useState<string>('');
@@ -334,7 +334,7 @@ export default function CoursesDetail() {
   );
 }
 
-CoursesDetail.acl = {
+QuizQuestionStoreDetail.acl = {
   action: 'read',
   subject: 'teacher-page'
 }

@@ -1,20 +1,14 @@
 import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next'
-import { IconButton, Tooltip } from '@mui/material';
-import Icon from 'src/@core/components/icon'
+import { useTranslation } from 'react-i18next';
+import { IconButton, Tooltip, Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
+import Icon from 'src/@core/components/icon';
 import { QuizOnline } from 'src/context/types';
 import toast from 'react-hot-toast';
 import AxiosInstance from 'src/configs/axios';
 import adminPathName from 'src/configs/endpoints/admin';
-
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
-import Button from '@mui/material/Button';
 import Link from 'next/link';
 import { useDispatch } from 'react-redux';
-import { updateData } from 'src/store/apps/breadcrumbs'
+import { updateData } from 'src/store/apps/breadcrumbs';
 
 interface ActionsProps {
   row: QuizOnline;
@@ -24,9 +18,10 @@ interface ActionsProps {
 }
 
 const Actions: React.FC<ActionsProps & { fetchDataList: () => void }> = ({ row, setDataList, setSelectedName }) => {
-  const { t } = useTranslation()
+  const { t } = useTranslation();
   const editedData = row;
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const dispatch = useDispatch();
 
   const handleDelete = async () => {
     try {
@@ -35,20 +30,17 @@ const Actions: React.FC<ActionsProps & { fetchDataList: () => void }> = ({ row, 
           id: row._id
         }
       });
-      toast.success('Delete Successfully')
-      setDataList(prevData => prevData.filter(x => {
-        return x._id !== row._id
-      }))
+      toast.success('Delete Successfully');
+      setDataList(prevData => prevData.filter(x => x._id !== row._id));
     } catch (error: any) {
       if (error && error.response) {
-        toast.error(error.response.data.message)
+        toast.error(error.response.data.message);
       }
     }
   };
 
-  const user = localStorage.getItem('userData')
-  const userData = user ? JSON.parse(user) : null
-  const dispatch = useDispatch()
+  const user = localStorage.getItem('userData');
+  const userData = user ? JSON.parse(user) : null;
 
   return (
     <>
@@ -57,7 +49,7 @@ const Actions: React.FC<ActionsProps & { fetchDataList: () => void }> = ({ row, 
           size='small'
           component={Link}
           href={`/apps/quiz-online/detail/${row._id}`}
-          sx={{ color: 'text.secondary', display: 'none' }}
+          sx={{ color: 'text.secondary' }}
           onClick={() => {
             if (setSelectedName) {
               setSelectedName(row.title);
@@ -67,23 +59,11 @@ const Actions: React.FC<ActionsProps & { fetchDataList: () => void }> = ({ row, 
                 title: row.title,
                 url: `/apps/quiz-online/detail/${row._id}`
               }
-            ))
+            ));
           }}
         >
           <Icon icon='tabler:eye' />
         </IconButton>
-      </Tooltip>
-      <Tooltip title={('Edit')}>
-        <>
-          <IconButton
-            disabled={userData._id !== editedData?.teacherId}
-            size='small'
-            component={Link}
-            href={`/apps/quiz-online/update/${row._id}`}
-            sx={{ color: 'text.secondary', display: 'none' }}>
-            <Icon icon='tabler:edit' />
-          </IconButton>
-        </>
       </Tooltip>
       <Tooltip title={t('Delete')}>
         <>
@@ -98,8 +78,8 @@ const Actions: React.FC<ActionsProps & { fetchDataList: () => void }> = ({ row, 
         </>
       </Tooltip>
 
-      {/* Delete */}
-      < Dialog open={isDeleteDialogOpen} onClose={() => setIsDeleteDialogOpen(false)}>
+      {/* Delete Dialog */}
+      <Dialog open={isDeleteDialogOpen} onClose={() => setIsDeleteDialogOpen(false)}>
         <DialogTitle
           id='delete'
           sx={{
@@ -147,7 +127,7 @@ const Actions: React.FC<ActionsProps & { fetchDataList: () => void }> = ({ row, 
             </Button>
           </>
         </DialogActions>
-      </Dialog >
+      </Dialog>
     </>
   );
 };

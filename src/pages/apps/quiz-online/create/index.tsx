@@ -223,14 +223,10 @@ export default function CreateQuizOnlinePage() {
 
   async function hostRoom(roomId: string, quizId: string) {
     socket.connect()
-    socket.on("connect", () => {
-      console.log("connect ", socket.id);
-    })
     socket.emit("hostRoom", {
       roomId,
       quizId
     })
-
   }
 
   function settingsQuizOnlineValid(): boolean {
@@ -267,7 +263,7 @@ export default function CreateQuizOnlinePage() {
     const res = await AxiosInstance.post("https://e-learming-be.onrender.com/quiz-online/post", data)
     const quizId = res.data._id
     toast.success("Tạo đề thành công")
-    const randomRoomId = generateRandom(3)
+    const randomRoomId = generateRandom(5)
     setRoomId(randomRoomId)
     hostRoom(randomRoomId, quizId)
     try {
