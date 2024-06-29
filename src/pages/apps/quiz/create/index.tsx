@@ -13,6 +13,7 @@ import {
   Checkbox,
   Divider,
   Grid,
+  IconButton,
   MenuItem,
   Modal,
   Paper,
@@ -28,7 +29,6 @@ import {
   TablePagination,
   TableRow,
   TextField,
-  Tooltip,
   Typography
 } from "@mui/material";
 
@@ -43,7 +43,7 @@ import CustomTextField from "src/@core/components/mui/text-field";
 import teacherConfig from "src/configs/endpoints/teacher";
 
 // ** Icon Imports
-
+import Icon from 'src/@core/components/icon';
 
 // ** Styled Component
 import dayjs from "dayjs";
@@ -53,12 +53,12 @@ import { ICourse } from "../../../../types/quiz/types";
 
 // ** Utils
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { hexToRGBA } from 'src/@core/utils/hex-to-rgba';
 import { TimeState } from "src/types/timeTypes";
 import { createDate } from "src/utils/dateTime";
 import { handleAxiosError } from "src/utils/errorHandler";
 import { allPropertiesExist } from "src/utils/validationUtils";
-import { useTranslation } from "react-i18next";
 
 interface IQuestionStore {
   title: string,
@@ -588,35 +588,32 @@ export default function CreateQuizPage() {
               </Grid>
               <Grid item xs={9.5}>
                 <Grid item xs={9.5}>
-                  <Tooltip
-                    arrow
-                    open={!isTimeEndLessThanTimeStart()}
-                    title={t("The End Time Must Be Greater Than The Start Time")}
-                    componentsProps={{
-                      tooltip: {
-                        sx: {
-                          fontWeight: 400,
-                          color: "#000",
-                          backgroundColor: 'secondary.main',
-                        },
-                      },
-                    }}
-                    placement="bottom">
-                    <Box>
-                      <DateTimePicker
-                        onChange={(newValue) => {
-                          if (newValue) {
-                            setTimeEnd({
-                              days: newValue.date(),
-                              months: newValue.month() + 1,
-                              years: newValue.year(),
-                              minutes: newValue.minute(),
-                              hours: newValue.hour()
-                            })
-                          }
-                        }} />
-                    </Box>
-                  </Tooltip>
+                  <Box sx={{ position: "relative" }}>
+                    <DateTimePicker
+                    sx={{'& .MuiInputBase-root fieldset': {
+                      border: theme => !isTimeEndLessThanTimeStart() ? `1px solid ${theme.palette.error.main}` : `1px solid ${theme.palette.divider}`
+                    }}}
+                      onChange={(newValue) => {
+                        if (newValue) {
+                          setTimeEnd({
+                            days: newValue.date(),
+                            months: newValue.month() + 1,
+                            years: newValue.year(),
+                            minutes: newValue.minute(),
+                            hours: newValue.hour()
+                          })
+                        }
+                      }} />
+                    {!isTimeEndLessThanTimeStart() && <Box
+                     sx={{
+                      position: "absolute",
+                      right: 0,
+                      top: '25%',
+                      transform: 'translateY(25%)'
+                    }}>
+                      <Typography color="error">{t("The End Time Must Be Greater Than The Start Time")}</Typography>
+                    </Box>}
+                  </Box>
                 </Grid>
               </Grid>
             </Grid>
@@ -721,7 +718,7 @@ export default function CreateQuizPage() {
         <Modal onClose={handleCloseModal} open={openModal}>
           <Box sx={{
             outline: "none",
-            backgroundColor: "customColors.darkPaperBg",
+            backgroundColor: "background.paper",
             position: 'absolute',
             top: '50%',
             left: '50%',
@@ -730,6 +727,7 @@ export default function CreateQuizPage() {
           }}>
             <Box
               sx={{
+                position: 'relative',
                 height: 600,
                 overflowY: "scroll",
                 overflowX: "hidden",
@@ -745,6 +743,15 @@ export default function CreateQuizPage() {
                   background: 'transparent'
                 },
               }}>
+              <Box sx={{
+                position: 'absolute',
+                top: 0,
+                right: 0,
+              }}>
+                <IconButton onClick={handleCloseModal}>
+                  <Icon icon='material-symbols:close' />
+                </IconButton>
+              </Box>
               <CardHeader sx={{ mt: 8, mb: 4 }} title={t('Select Quiz Question Store')} />
               <TabContext value={activeTab || "1"}>
                 <Box sx={{ pl: "1.5rem" }}>

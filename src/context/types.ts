@@ -12,7 +12,7 @@ export type UserDataType = {
   _id: string
   username: string
   fullName?: string
-  avatar?: string | null
+  avatar?: string
   role: string
   email: string
   name?: {
@@ -29,7 +29,7 @@ export type AuthValuesType = {
   logout: () => void
   user: UserDataType | null
   setLoading: (value: boolean) => void
-  setUser: (value: UserDataType | null) => void
+  setUser: React.Dispatch<React.SetStateAction<UserDataType | null>>;
   login: (params: LoginParams, errorCallback?: ErrCallbackType) => void
 }
 

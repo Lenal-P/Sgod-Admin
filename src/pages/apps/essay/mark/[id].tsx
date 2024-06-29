@@ -1,5 +1,5 @@
 // ** React Imports
-import { ChangeEvent, Fragment, useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 
 // ** MUI Imports
 import { Box, Button, Card, CardContent, CardHeader, Dialog, DialogActions, DialogContent, DialogTitle, Grid, IconButton, MenuItem, Paper, SelectChangeEvent, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, Typography } from "@mui/material";
@@ -32,6 +32,7 @@ import AxiosInstance from "src/configs/axios";
 import { htmlToDraftBlocks } from "src/utils/draft";
 
 // ** Next
+import { Icon } from "@iconify/react";
 import draftToHtml from "draftjs-to-html";
 import { useRouter } from "next/router";
 import toast from "react-hot-toast";
@@ -39,7 +40,6 @@ import { useTranslation } from "react-i18next";
 import { CheckPlagiarism, EssayData } from "src/context/types";
 import { TimeState } from "src/types/timeTypes";
 import TableHeaderDetail from "src/views/apps/essay/TableHeaderDetail";
-import { Icon } from "@iconify/react";
 
 interface IFileProp {
   name: string
@@ -299,7 +299,7 @@ export default function CreateEssayPage() {
               <Grid item xs={9.5}>
                 <EditorWrapper
                   sx={{
-                    '&': { minHeight: "300px", border: "1px solid rgba(208, 212, 241, 0.16)" },
+                    '&': { minHeight: "300px", border: theme => `1px solid ${theme.palette.divider}` },
                     '& .rdw-editor-wrapper .rdw-editor-main': { px: 5 },
                     '& .rdw-editor-wrapper, & .rdw-option-wrapper': { border: 0 },
                     '& .rdw-editor-wrapper .rdw-editor-toolbar .rdw-image-modal': { transform: 'translateX(-50%)' },
@@ -464,7 +464,7 @@ export default function CreateEssayPage() {
               <Grid item xs={9.5}>
                 <EditorWrapper
                   sx={{
-                    '&': { minHeight: "300px", border: "1px solid rgba(208, 212, 241, 0.16)" },
+                    '&': { minHeight: "300px", border: theme => `1px solid ${theme.palette.divider}` },
                     '& .rdw-editor-wrapper .rdw-editor-main': { px: 5 },
                     '& .rdw-editor-wrapper, & .rdw-option-wrapper': { border: 0 },
                     '& .rdw-editor-wrapper .rdw-editor-toolbar .rdw-image-modal': { transform: 'translateX(-50%)' },

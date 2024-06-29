@@ -53,6 +53,8 @@ import { updateData } from 'src/store/apps/breadcrumbs'
 import toast from "react-hot-toast";
 import { QuizScore } from "src/context/types";
 import { CSVLink } from 'react-csv';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 interface IQuizQuestion {
   _id: string;
@@ -75,7 +77,6 @@ interface IQuizDetail {
   time_end: string; // ISO string format for dates
   createAt: string; // ISO string format for dates
 }
-
 
 export default function DetailQuiz() {
   const router = useRouter()
@@ -156,14 +157,57 @@ export default function DetailQuiz() {
 
   const generateCsvData = () => {
     return listScore.map((quiz: any) => ({
-      name: quiz.name,
-      total_exam: quiz.dataScore.total_exam,
-      total_score_all_questions: quiz.dataScore.total_score_all_questions,
-      total_select_answer: quiz.dataScore.total_select_answer,
-      max_score: quiz.dataScore.max_score,
-      ten_point_scale: quiz.dataScore.ten_point_scale,
-      num_true_answer: quiz.dataScore.num_true_answer,
+      Student: quiz.name,
+      Total_Exam: quiz.dataScore.total_exam,
+      Total_Score_All_Questions: quiz.dataScore.total_score_all_questions,
+      Total_Select_Answer: quiz.dataScore.total_select_answer,
+      Max_Score: quiz.dataScore.max_score,
+      Ten_Point_Scale: quiz.dataScore.ten_point_scale,
+      Num_True_Answer: quiz.dataScore.num_true_answer,
     }));
+  };
+
+  const generatePdfContent = () => {
+    const doc = new jsPDF() as any; // Type assertion might be necessary here
+    const totalPages = doc.internal.getNumberOfPages(); // Get total number of pages
+
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i); // Set current page
+      doc.setFontSize(12);
+
+      // Add title "List Scores" at the top
+      doc.text(t("List Scores"), 105, 10, null, null, 'center');
+
+      // Add content to each page
+      if (listScore && listScore.length > 0) {
+        doc.autoTable({
+          head: [['Full Name', 'Total Exam', 'Total Score All Questions', 'Total Select Answer', 'Max Score', 'Ten Point Scale', 'Num True Answer']],
+          body: listScore.map(user => [
+            user.name,
+            user.dataScore.total_exam,
+            user.dataScore.total_score_all_questions,
+            user.dataScore.total_select_answer,
+            user.dataScore.max_score,
+            user.dataScore.ten_point_scale,
+            user.dataScore.num_true_answer
+          ]),
+          startY: 20
+        });
+        const signatureText = t("Teacher");
+        const signatureX = doc.internal.pageSize.width - 30;
+        const signatureY = doc.autoTable.previous.finalY + 15;
+        doc.text(signatureText, signatureX, signatureY, null, null, 'right');
+      } else {
+        doc.text(t("No rows"));
+      }
+    }
+
+    return doc;
+  };
+
+  const exportPDF = () => {
+    const doc = generatePdfContent();
+    doc.save(`quiz_scores_${router.query.id}.pdf`);
   };
 
   const user = localStorage.getItem('userData')
@@ -452,143 +496,148 @@ export default function DetailQuiz() {
                     className="btn btn-primary"
                   >
                     <Button
-                      variant='contained'>
+                      variant='contained' disabled={!listScore || listScore.length === 0}>
                       {t('Export')} {t('CSV')}
                     </Button>
                   </CSVLink>
+                  <Button variant='contained' onClick={exportPDF} disabled={!listScore || listScore.length === 0}>
+                    {t('Export')} {t('PDF')}
+                  </Button>
                 </Box>
-                {listScore && listScore.length > 0 ? (
-                  <TableContainer component={Paper} sx={{ borderRadius: 0 }}>
-                    <Table aria-label='custom pagination table'>
-                      <Box>
-                        <TableHead sx={{ backgroundColor: theme => `${theme.palette.customColors.tableHeaderBg}` }}>
-                          <TableRow>
-                            <TableCell sx={{ width: '20%' }}>
-                              {t('Full Name')}
-                            </TableCell>
-                            <TableCell sx={{ fontSize: 15, textAlign: 'center' }}>
-                              {t('Total Exam')}
-                            </TableCell>
-                            <TableCell sx={{ fontSize: 15, width: '20%', textAlign: 'center' }}>
-                              {t('Total Score All Questions')}
-                            </TableCell>
-                            <TableCell sx={{ fontSize: 15, textAlign: 'center' }}>
-                              {t('Total Selected Answer')}
-                            </TableCell>
-                            <TableCell sx={{ fontSize: 15, textAlign: 'center' }}>
-                              {t('Max Score')}
-                            </TableCell>
-                            <TableCell sx={{ fontSize: 15, textAlign: 'center' }}>
-                              {t('Ten Point Scale')}
-                            </TableCell>
-                            <TableCell sx={{ fontSize: 15, textAlign: 'center' }}>
-                              {t('Num True Answer')}
-                            </TableCell>
-                            <TableCell style={{ textAlign: 'center' }}>
-                              {t('Actions')}
-                            </TableCell>
-                          </TableRow>
-                        </TableHead>
-                        <TableBody>
-                          {listScore && listScore.length > 0 && listScore.map((user: any, index: number) => (
-                            <TableRow key={index}>
-                              <TableCell sx={{ fontSize: 15, width: '20%' }}>
-                                {user.name}
+                <div id="pdfContent">
+                  {listScore && listScore.length > 0 ? (
+                    <TableContainer component={Paper} sx={{ borderRadius: 0 }}>
+                      <Table aria-label='custom pagination table'>
+                        <Box>
+                          <TableHead sx={{ backgroundColor: theme => `${theme.palette.customColors.tableHeaderBg}` }}>
+                            <TableRow>
+                              <TableCell sx={{ width: '20%' }}>
+                                {t('Full Name')}
                               </TableCell>
                               <TableCell sx={{ fontSize: 15, textAlign: 'center' }}>
-                                {user.dataScore.total_exam}
+                                {t('Total Exam')}
                               </TableCell>
                               <TableCell sx={{ fontSize: 15, width: '20%', textAlign: 'center' }}>
-                                {user.dataScore.total_score_all_questions}
+                                {t('Total Score All Questions')}
                               </TableCell>
                               <TableCell sx={{ fontSize: 15, textAlign: 'center' }}>
-                                {user.dataScore.total_select_answer}
+                                {t('Total Selected Answer')}
                               </TableCell>
                               <TableCell sx={{ fontSize: 15, textAlign: 'center' }}>
-                                {user.dataScore.max_score}
+                                {t('Max Score')}
                               </TableCell>
                               <TableCell sx={{ fontSize: 15, textAlign: 'center' }}>
-                                {user.dataScore.ten_point_scale}
+                                {t('Ten Point Scale')}
                               </TableCell>
                               <TableCell sx={{ fontSize: 15, textAlign: 'center' }}>
-                                {user.dataScore.num_true_answer}
+                                {t('Num True Answer')}
                               </TableCell>
-                              <TableCell style={{ fontSize: 15, textAlign: 'center' }}>
-                                <>
-                                  <Tooltip title={t('View')}>
-                                    <IconButton
-                                      size='small'
-                                      component={Link}
-                                      sx={{ color: 'text.secondary', fontSize: 22, mx: 2 }}
-                                      href={`//apps/quiz/quizExam/${router.query.id}?studentId=${user.id}`}
-                                      onClick={() => {
-                                        dispatch(updateData(
-                                          {
-                                            title: user.name,
-                                            url: `//apps/quiz/quizExam/${router.query.id}`
-                                          }
-                                        ))
-                                      }}
-                                    >
-                                      <Icon icon='tabler:eye' />
-                                    </IconButton>
-                                  </Tooltip>
-                                </>
+                              <TableCell style={{ textAlign: 'center' }}>
+                                {t('Actions')}
                               </TableCell>
                             </TableRow>
-                          ))}
-                        </TableBody>
+                          </TableHead>
+                          <TableBody>
+                            {listScore && listScore.length > 0 && listScore.map((user: any, index: number) => (
+                              <TableRow key={index}>
+                                <TableCell sx={{ fontSize: 15, width: '20%' }}>
+                                  {user.name}
+                                </TableCell>
+                                <TableCell sx={{ fontSize: 15, textAlign: 'center' }}>
+                                  {user.dataScore.total_exam}
+                                </TableCell>
+                                <TableCell sx={{ fontSize: 15, width: '20%', textAlign: 'center' }}>
+                                  {user.dataScore.total_score_all_questions}
+                                </TableCell>
+                                <TableCell sx={{ fontSize: 15, textAlign: 'center' }}>
+                                  {user.dataScore.total_select_answer}
+                                </TableCell>
+                                <TableCell sx={{ fontSize: 15, textAlign: 'center' }}>
+                                  {user.dataScore.max_score}
+                                </TableCell>
+                                <TableCell sx={{ fontSize: 15, textAlign: 'center' }}>
+                                  {user.dataScore.ten_point_scale}
+                                </TableCell>
+                                <TableCell sx={{ fontSize: 15, textAlign: 'center' }}>
+                                  {user.dataScore.num_true_answer}
+                                </TableCell>
+                                <TableCell style={{ fontSize: 15, textAlign: 'center' }}>
+                                  <>
+                                    <Tooltip title={t('View')}>
+                                      <IconButton
+                                        size='small'
+                                        component={Link}
+                                        sx={{ color: 'text.secondary', fontSize: 22, mx: 2 }}
+                                        href={`//apps/quiz/quizExam/${router.query.id}?studentId=${user.id}`}
+                                        onClick={() => {
+                                          dispatch(updateData(
+                                            {
+                                              title: user.name,
+                                              url: `//apps/quiz/quizExam/${router.query.id}`
+                                            }
+                                          ))
+                                        }}
+                                      >
+                                        <Icon icon='tabler:eye' />
+                                      </IconButton>
+                                    </Tooltip>
+                                  </>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Box>
+                      </Table>
+                      <TablePagination
+                        rowsPerPageOptions={[{ label: 'All', value: -1 }]}
+                        count={listScore.length || 1}
+                        rowsPerPage={paginationModel.pageSize}
+                        page={paginationModel.page}
+                        component="div"
+                        onPageChange={handleChangePageScore}
+                        onRowsPerPageChange={handleChangeRowsPerPageScore}
+                      />
+                    </TableContainer>
+                  ) : (
+                    <TableContainer component={Paper} sx={{ borderRadius: 0 }}>
+                      <Table aria-label='custom pagination table'>
+                        <Box>
+                          <TableHead sx={{ backgroundColor: theme => `${theme.palette.customColors.tableHeaderBg}` }}>
+                            <TableRow>
+                              <TableCell sx={{ width: '20%' }}>
+                                {t('Full Name')}
+                              </TableCell>
+                              <TableCell sx={{ fontSize: 15, textAlign: 'center' }}>
+                                {t('Total Exam')}
+                              </TableCell>
+                              <TableCell sx={{ fontSize: 15, width: '20%', textAlign: 'center' }}>
+                                {t('Total Score All Questions')}
+                              </TableCell>
+                              <TableCell sx={{ fontSize: 15, textAlign: 'center' }}>
+                                {t('Total Select Answer')}
+                              </TableCell>
+                              <TableCell sx={{ fontSize: 15, textAlign: 'center' }}>
+                                {t('Max Score')}
+                              </TableCell>
+                              <TableCell sx={{ fontSize: 15, textAlign: 'center' }}>
+                                {t('Ten Point Scale')}
+                              </TableCell>
+                              <TableCell sx={{ fontSize: 15, textAlign: 'center' }}>
+                                {t('Num True Answer')}
+                              </TableCell>
+                              <TableCell style={{ textAlign: 'center' }}>
+                                {t('Actions')}
+                              </TableCell>
+                            </TableRow>
+                          </TableHead>
+                        </Box>
+                      </Table>
+                      <Box sx={{ textAlign: 'center', padding: 5 }}>
+                        {t('No rows')}
                       </Box>
-                    </Table>
-                    <TablePagination
-                      rowsPerPageOptions={[{ label: 'All', value: -1 }]}
-                      count={listScore.length || 1}
-                      rowsPerPage={paginationModel.pageSize}
-                      page={paginationModel.page}
-                      component="div"
-                      onPageChange={handleChangePageScore}
-                      onRowsPerPageChange={handleChangeRowsPerPageScore}
-                    />
-                  </TableContainer>
-                ) : (
-                  <TableContainer component={Paper} sx={{ borderRadius: 0 }}>
-                    <Table aria-label='custom pagination table'>
-                      <Box>
-                        <TableHead sx={{ backgroundColor: theme => `${theme.palette.customColors.tableHeaderBg}` }}>
-                          <TableRow>
-                            <TableCell sx={{ width: '20%' }}>
-                              {t('Full Name')}
-                            </TableCell>
-                            <TableCell sx={{ fontSize: 15, textAlign: 'center' }}>
-                              {t('Total Exam')}
-                            </TableCell>
-                            <TableCell sx={{ fontSize: 15, width: '20%', textAlign: 'center' }}>
-                              {t('Total Score All Questions')}
-                            </TableCell>
-                            <TableCell sx={{ fontSize: 15, textAlign: 'center' }}>
-                              {t('Total Select Answer')}
-                            </TableCell>
-                            <TableCell sx={{ fontSize: 15, textAlign: 'center' }}>
-                              {t('Max Score')}
-                            </TableCell>
-                            <TableCell sx={{ fontSize: 15, textAlign: 'center' }}>
-                              {t('Ten Point Scale')}
-                            </TableCell>
-                            <TableCell sx={{ fontSize: 15, textAlign: 'center' }}>
-                              {t('Num True Answer')}
-                            </TableCell>
-                            <TableCell style={{ textAlign: 'center' }}>
-                              {t('Actions')}
-                            </TableCell>
-                          </TableRow>
-                        </TableHead>
-                      </Box>
-                    </Table>
-                    <Box sx={{ textAlign: 'center', padding: 5 }}>
-                      {t('No rows')}
-                    </Box>
-                  </TableContainer>
-                )}
+                    </TableContainer>
+                  )}
+                </div>
               </Paper>
             </>
           )}

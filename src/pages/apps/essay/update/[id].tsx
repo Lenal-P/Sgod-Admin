@@ -2,7 +2,7 @@
 import { ChangeEvent, useEffect, useState } from "react";
 
 // ** MUI Imports
-import { Box, Button, Card, CardContent, CardHeader, Grid, MenuItem, SelectChangeEvent, Typography } from "@mui/material";
+import { Box, Button, Card, CardContent, Grid, MenuItem, SelectChangeEvent, Typography } from "@mui/material";
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 
 // ** Custom Component Imports
@@ -39,8 +39,10 @@ import TableHeaderBreadcrumb from "src/views/apps/courses/list/TableHeaderBreadc
 
 // ** Next
 import { useRouter } from "next/router";
+import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { TimeState } from "src/types/timeTypes";
+import { handleAxiosError } from "src/utils/errorHandler";
 
 interface IFileProp {
   name: string
@@ -166,30 +168,37 @@ export default function CreateEssayPage() {
 
   useEffect(() => {
     const fetchQuizStore = async () => {
-      const res = await AxiosInstance.get(`${teacherConfig.getExamDetail}/${router.query.id}`)
-      const result = res.data.data.data
+      try {
+        const res = await AxiosInstance.get(`${teacherConfig.getExamDetail}/${router.query.id}`)
+        const result = res.data.data.data
 
-      setEditorState(htmlToDraftBlocks(result.content))
-      setState(result)
-      setTimeStart({
-        days: new Date(result.time_start).getDate(),
-        months: new Date(result.time_start).getMonth() + 1,
-        years: new Date(result.time_start).getFullYear(),
-        hours: new Date(result.time_start).getHours(),
-        minutes: new Date(result.time_start).getMinutes()
-      })
-      setTimeEnd({
-        days: new Date(result.time_end).getDate(),
-        months: new Date(result.time_end).getMonth() + 1,
-        years: new Date(result.time_end).getFullYear(),
-        hours: new Date(result.time_end).getHours(),
-        minutes: new Date(result.time_end).getMinutes()
-      })
+        setEditorState(htmlToDraftBlocks(result.content))
+        setState(result)
+        setTimeStart({
+          days: new Date(result.time_start).getDate(),
+          months: new Date(result.time_start).getMonth() + 1,
+          years: new Date(result.time_start).getFullYear(),
+          hours: new Date(result.time_start).getHours(),
+          minutes: new Date(result.time_start).getMinutes()
+        })
+        setTimeEnd({
+          days: new Date(result.time_end).getDate(),
+          months: new Date(result.time_end).getMonth() + 1,
+          years: new Date(result.time_end).getFullYear(),
+          hours: new Date(result.time_end).getHours(),
+          minutes: new Date(result.time_end).getMinutes()
+        })
+      } catch (error) {
+        handleAxiosError(error)
+      }
     }
+
     fetchQuizStore()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function handleSubmit() {
+    setIsLoading(true)
     const formData = new FormData();
     formData.append("title", state.title);
     formData.append("file", files[0]);
@@ -199,15 +208,16 @@ export default function CreateEssayPage() {
     formData.append("total_time", (state.total_time).toString());
     formData.append("time_start", createDate(timeStart)?.toISOString() || "");
     formData.append("time_end", createDate(timeEnd)?.toISOString() || "");
-    formData.append("teacher_id", JSON.parse(localStorage.getItem("userData")!)._id);
 
-
-    await AxiosInstance.post("https://e-learming-be.onrender.com/essay-exam", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      }
+    try {
+      await AxiosInstance.put(`https://e-learming-be.onrender.com/essay-exam/update-essay-exam/${router.query.id}`, formData, {
+        headers: { "Content-Type": "multipart/form-data", }
+      })
+      toast.success("Update successfully!")
+    } catch (error) {
+      handleAxiosError(error)
     }
-    )
+    setIsLoading(false)
   }
 
 
@@ -236,7 +246,7 @@ export default function CreateEssayPage() {
               <Grid item xs={9.5}>
                 <EditorWrapper
                   sx={{
-                    '&': { minHeight: "300px", border: "1px solid rgba(208, 212, 241, 0.16)" },
+                    '&': { minHeight: "300px", border: theme => `1px solid ${theme.palette.divider}` },
                     '& .rdw-editor-wrapper .rdw-editor-main': { px: 5 },
                     '& .rdw-editor-wrapper, & .rdw-option-wrapper': { border: 0 },
                     '& .rdw-editor-wrapper .rdw-editor-toolbar .rdw-image-modal': { transform: 'translateX(-50%)' },
@@ -399,7 +409,7 @@ export default function CreateEssayPage() {
                         event.stopPropagation()
                         window.open(state.files[0]);
                       }} sx={{ color: theme => `${theme.palette.text.primary}`, }}>
-                        {state.files[0]}
+                        {state.files[0] || "No file selected"}
                       </Box>
 
                     ) : (

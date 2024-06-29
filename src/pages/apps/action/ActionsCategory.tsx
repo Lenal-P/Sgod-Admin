@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { useTranslation } from 'react-i18next'
-import { IconButton, Tooltip } from '@mui/material';
+import { IconButton, Tooltip, Typography } from '@mui/material';
 import Icon from 'src/@core/components/icon'
 import { Category } from 'src/context/types';
 import toast from 'react-hot-toast';
@@ -31,7 +31,10 @@ const Actions: React.FC<ActionsProps> = ({ row, setDataCategory, fetchDataList }
   const [editedData, setEditedData] = useState(row);
   const ability = useContext(AbilityContext)
   const { control, setValue } = useForm()
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [icon, setIcon] = useState(row?.icon)
+  const [fileIcon, setFileIcon] = useState<File>()
+  const [fileError, setFileError] = useState<string | null>(null);
+  const [submitDisabled, setSubmitDisabled] = useState<boolean>(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const handleDelete = async () => {
@@ -85,19 +88,29 @@ const Actions: React.FC<ActionsProps> = ({ row, setDataCategory, fetchDataList }
     try {
       const fileInput = document.createElement('input');
       fileInput.type = 'file';
-      fileInput.accept = 'image/*';
+      fileInput.accept = '.jpg, .jpeg, .png'; // Chỉ chấp nhận các định dạng hình ảnh này
       fileInput.click();
       fileInput.addEventListener('change', async event => {
         const target = event.target as HTMLInputElement;
         const file = target.files?.[0];
         if (file) {
-          const reader = new FileReader();
-          reader.onload = (event) => {
-            const binaryString = event.target?.result as string;
-            setValue('icon', binaryString);
-            setSelectedFile(file);
-          };
-          reader.readAsDataURL(file);
+          if (!file.type.startsWith('image/')) {
+            setFileError('Invalid file type. Please choose an image file.');
+            setSubmitDisabled(true); // Disable nút Submit
+          } else if (!['image/jpeg', 'image/png'].includes(file.type)) {
+            setFileError('Unsupported file type. Please choose a .jpg, .jpeg, .png file.');
+          } else {
+            setFileError(null); // Reset fileError nếu loại file hợp lệ
+            setSubmitDisabled(false); // Enable nút Submit
+            const reader = new FileReader();
+            reader.onload = (event) => {
+              const binaryString = event.target?.result as string;
+              setValue('avatar', binaryString);
+              setIcon(binaryString);
+              setFileIcon(file);
+            };
+            reader.readAsDataURL(file);
+          }
         }
       });
     } catch (error) {
@@ -199,6 +212,70 @@ const Actions: React.FC<ActionsProps> = ({ row, setDataCategory, fetchDataList }
           </DialogContentText>
           <DialogContent>
             <Grid container spacing={6}>
+              <Grid item xs={12}>
+                <Controller
+                  name='icon'
+                  control={control}
+                  defaultValue={editedData?.icon || '/placeholder-image.jpg'}
+                  render={() => (
+                    <Grid
+                      container
+                      alignItems='center'
+                      justifyContent='center'
+                      sx={{ display: 'flex', flexDirection: 'column', mb: 5 }}
+                    >
+                      <Grid item sx={{ width: 100, height: 100, position: 'relative' }}>
+                        {editedData?.icon ? (
+                          <img
+                            src={icon}
+                            alt="icon"
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover',
+                              borderRadius: '50%',
+                              border: '1px solid #ccc',
+                              marginBottom: '10px',
+                            }}
+                          />
+                        ) : (
+                          <div
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              backgroundColor: '#f0f0f0',
+                              borderRadius: '50%',
+                              border: '1px solid #ccc',
+                              marginBottom: '10px',
+                            }}
+                          >
+                            <Typography variant="caption">{t('No icon')}</Typography>
+                          </div>
+                        )}
+                        <Grid item onClick={handleChooseFile} sx={{ position: 'absolute', top: "70%", right: 0 }}>
+                          <ButtonsFab />
+                        </Grid>
+                        {fileError && (
+                          <Typography variant="body2" sx={{
+                            position: 'fixed',
+                            color: 'red',
+                            width: '100%',
+                            textAlign: 'center',
+                            top: "40%",
+                            left: 0,
+                            zIndex: 9999
+                          }}>
+                            {fileError}
+                          </Typography>
+                        )}
+                      </Grid>
+                    </Grid>
+                  )}
+                />
+              </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
                   autoFocus
@@ -207,6 +284,7 @@ const Actions: React.FC<ActionsProps> = ({ row, setDataCategory, fetchDataList }
                   name="name"
                   label={t("Name")}
                   fullWidth
+                  sx={{ ml: '55%' }}
                   value={editedData?.name || ''}
                   onChange={(e) => {
                     setEditedData(prev => ({
@@ -215,40 +293,6 @@ const Actions: React.FC<ActionsProps> = ({ row, setDataCategory, fetchDataList }
                     }) as Category
                     )
                   }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Controller
-                  name='icon'
-                  control={control}
-                  defaultValue={editedData?.icon || ''}
-                  render={({ field }) => (
-                    <Grid
-                      container
-                      alignItems='end'
-                      spacing={2}
-                      sx={{ display: 'flex', gap: 1 }}
-                    >
-                      <Grid item sx={{ position: 'relative', flex: 1 }} >
-                        <TextField
-                          fullWidth
-                          label={t('Icon')}
-                          placeholder='/images/'
-                          value={field.value}
-                          onChange={e => {
-                            field.onChange(e)
-                            setValue('icon', e.target.value)
-                          }}
-                          sx={{ mt: 2 }}
-                        />
-                        <Grid item className='buttonAvatar' onClick={handleChooseFile}
-                          sx={{ position: 'absolute', top: '35%', right: 3 }}
-                        >
-                          <ButtonsFab />
-                        </Grid>
-                      </Grid>
-                    </Grid>
-                  )}
                 />
               </Grid>
             </Grid>
@@ -261,13 +305,12 @@ const Actions: React.FC<ActionsProps> = ({ row, setDataCategory, fetchDataList }
                 pb: theme => [`${theme.spacing(8)} !important`, `${theme.spacing(12.5)} !important`]
               }}
             >
-              <Button variant='contained' type='submit' onClick={() => {
-                saveEditedData(editedData, selectedFile!);
+              <Button variant='contained' type='submit' disabled={submitDisabled} onClick={() => {
+                saveEditedData(editedData, fileIcon!)
                 setIsEditDialogOpen(false);
               }}>
                 {t('Save')}
               </Button>
-
               <Button variant='tonal' color='secondary' onClick={() => setIsEditDialogOpen(false)}>
                 {t('Cancel')}
               </Button>
@@ -312,7 +355,7 @@ const Actions: React.FC<ActionsProps> = ({ row, setDataCategory, fetchDataList }
             px: theme => [`${theme.spacing(5)} !important`, `${theme.spacing(15)} !important`]
           }}
         >
-          <p>{t('Are you sure you want to delete this category?')}</p>
+          <p>{t('Are you sure you want to delete?')}</p>
         </DialogContent>
         <DialogActions>
           <>

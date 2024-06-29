@@ -33,6 +33,7 @@ import Icon from 'src/@core/components/icon';
 import BlankLayout from "src/@core/layouts/BlankLayout";
 import { hexToRGBA } from 'src/@core/utils/hex-to-rgba';
 import toast from "react-hot-toast";
+import { extractUrlImg } from "src/utils/regex";
 
 interface ICurrentListQuestion {
   question: string;
@@ -190,11 +191,11 @@ const QuizOnlineSlidePage = () => {
   function renderQuizSlide() {
     if (countdown === 0 && scoreboard.top5.length === 0) {
       return <Box sx={{ display: "flex", flexDirection: "column" }}>
-        <Card sx={{ borderRadius: 0 }}>
+        {!quizState.questions?.question.startsWith("<img src") && <Card sx={{ borderRadius: 0 }}>
           <CardContent sx={{ textAlign: "center" }}>
             <Typography variant="h4">{quizState?.questions?.question}</Typography>
           </CardContent>
-        </Card>
+        </Card>}
         <Box sx={{ px: "0.5rem", display: "flex", justifyContent: "space-between", py: "1rem" }}>
           <Box sx={{ my: "auto" }}>
             <Avatar sx={{ fontWeight: "bold", fontSize: 20, width: "66px", height: "66px" }}>
@@ -202,7 +203,9 @@ const QuizOnlineSlidePage = () => {
             </Avatar>
           </Box>
           <Box>
-            {true && <Image src="https:kahoot.com/files/2022/03/KKids_skills-02-2-1.png" alt="Question image" width={440} height={280} style={{ borderRadius: "1rem" }} />}
+            {quizState.questions?.question.startsWith("<img src")
+              ? <Image src={extractUrlImg(quizState.questions?.question)} alt="Question image" width={440} height={280} style={{ borderRadius: "1rem" }} />
+              : <Box sx={{ height: "200px" }}></Box>}
             {false && <Stack sx={{ height: 280 }} direction="row" spacing={4}>
               {[1, 2, 3, 4].map((x, i) => {
                 const { name, backgroundColor, icon } = getButtonStyle(i, 1)

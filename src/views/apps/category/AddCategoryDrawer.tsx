@@ -1,6 +1,3 @@
-// ** React Imports
-import { useState } from 'react'
-
 // ** MUI Imports
 import Drawer from '@mui/material/Drawer'
 import Button from '@mui/material/Button'
@@ -9,7 +6,6 @@ import IconButton from '@mui/material/IconButton'
 import Typography from '@mui/material/Typography'
 import Box, { BoxProps } from '@mui/material/Box'
 import TextField from '@mui/material/TextField'
-import Grid from '@mui/material/Grid'
 
 // ** Third Party Imports
 import { useForm, Controller } from 'react-hook-form'
@@ -23,7 +19,6 @@ import Icon from 'src/@core/components/icon'
 import AxiosInstance from 'src/configs/axios'
 import adminPathName from 'src/configs/endpoints/admin';
 import { Category } from 'src/context/types'
-import ButtonsFab from 'src/views/pages/admin-profile/components/ButtonsFab'
 
 // ** Define Header component using styled function
 const Header = styled(Box)<BoxProps>(({ theme }) => ({
@@ -35,20 +30,16 @@ const Header = styled(Box)<BoxProps>(({ theme }) => ({
 
 const SidebarAddCategory = (props: any) => {
   const { open, toggle, fetchDataList } = props;
-  const { control, handleSubmit, setValue } = useForm()
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const { control, handleSubmit } = useForm()
 
-  const createCategory = async (data: Category, file: File) => {
+  const createCategory = async (data: Category) => {
     try {
       const formData = new FormData();
-
-      // Thêm dữ liệu của file vào formData
-      formData.append('file', file);
 
       // Thêm dữ liệu của category vào formData
       formData.append('_id', data._id);
       formData.append('name', data.name);
-      formData.append('icon', data.icon);
+      formData.append('icon', '/placeholder-image.jpg');
 
       // Gọi API để tạo category và gửi formData
       const response = await AxiosInstance.post(`${adminPathName.addCategoryEndpoint}`, formData, {
@@ -67,43 +58,11 @@ const SidebarAddCategory = (props: any) => {
 
 
   const onSubmit = (data: any) => {
-    if (selectedFile) {
-      createCategory(data, selectedFile);
-    } else {
-      toast.error('Please select an icon file');
-    }
+    createCategory(data);
   };
-
 
   const handleClose = () => {
     toggle();
-  };
-
-  const handleChooseFile = async () => {
-    try {
-      const fileInput = document.createElement('input');
-      fileInput.type = 'file';
-      fileInput.accept = 'image/*';
-      fileInput.click();
-      fileInput.addEventListener('change', async event => {
-        const target = event.target as HTMLInputElement;
-        const file = target.files?.[0];
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = (event) => {
-            const binaryString = event.target?.result as string;
-            setValue('icon', binaryString);
-            setSelectedFile(file);
-          };
-          reader.readAsDataURL(file);
-
-          // Remove the following line as `data` is not defined here
-          // await createCategory(data, selectedFile);
-        }
-      });
-    } catch (error) {
-      console.error('Error choosing file:', error);
-    }
   };
 
   const { t } = useTranslation()
@@ -139,36 +98,6 @@ const SidebarAddCategory = (props: any) => {
                 onChange={onChange}
                 placeholder='Category Name'
               />
-            )}
-          />
-          <Controller
-            name='icon'
-            control={control}
-            render={({ field }) => (
-              <Grid
-                container
-                alignItems='end'
-                spacing={2}
-                sx={{ display: 'flex', gap: 1, mb: 4 }}
-              >
-                <Grid item sx={{ position: 'relative', flex: 1 }} >
-                  <TextField
-                    fullWidth
-                    placeholder='Icon'
-                    defaultValue={field.value}
-                    value={field.value}
-                    onChange={e => {
-                      setValue('icon', e.target.value)
-                    }}
-                    sx={{ mt: 2 }}
-                  />
-                  <Grid item className='buttonAvatar' onClick={handleChooseFile}
-                    sx={{ position: 'absolute', top: '35%', right: 3 }}
-                  >
-                    <ButtonsFab />
-                  </Grid>
-                </Grid>
-              </Grid>
             )}
           />
           <Button type='submit' variant='contained' sx={{ mr: 3 }}>

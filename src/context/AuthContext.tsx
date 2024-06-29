@@ -30,6 +30,7 @@ type Props = {
 }
 
 const AuthProvider = ({ children }: Props) => {
+
   // ** States
   const [user, setUser] = useState<UserDataType | null>(defaultProvider.user)
   const [loading, setLoading] = useState<boolean>(defaultProvider.loading)
@@ -50,7 +51,6 @@ const AuthProvider = ({ children }: Props) => {
 
           })
           .catch(() => {
-
             localStorage.removeItem('userData')
             localStorage.removeItem('refreshToken')
             localStorage.removeItem('accessToken')
@@ -86,6 +86,7 @@ const AuthProvider = ({ children }: Props) => {
         params.rememberMe ? window.localStorage.setItem('userData', JSON.stringify(response.data.data)) : null
 
         const redirectURL = returnUrl && returnUrl !== '/' ? returnUrl : '/'
+        console.log("🚀 ~ handleLogin ~ redirectURL:", { redirectURL })
 
         router.replace(redirectURL as string)
       })
@@ -113,5 +114,7 @@ const AuthProvider = ({ children }: Props) => {
 
   return <AuthContext.Provider value={values}>{children}</AuthContext.Provider>
 }
+
+
 
 export { AuthContext, AuthProvider }

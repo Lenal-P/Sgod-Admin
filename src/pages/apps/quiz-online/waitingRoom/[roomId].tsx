@@ -32,7 +32,6 @@ const WaitingRoom = () => {
 
     socket.on("receiveClient", ({ clients }) => {
       setStudents(clients)
-      console.log("receiveClient ", { clients });
     })
 
     return () => {

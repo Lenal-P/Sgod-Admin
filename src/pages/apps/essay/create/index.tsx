@@ -34,6 +34,7 @@ import { useTranslation } from "react-i18next";
 import DropzoneWrapper from 'src/@core/styles/libs/react-dropzone';
 import AxiosInstance from "src/configs/axios";
 import { TimeState } from "src/types/timeTypes";
+import { handleAxiosError } from "src/utils/errorHandler";
 import { ICourse } from "../../../../types/quiz/types";
 
 interface IFileProp {
@@ -131,29 +132,25 @@ export default function CreateEssayPage() {
 
 
   async function handleSubmit() {
-    const formData = new FormData();
-    formData.append("title", title);
-    formData.append("file", files[0]);
-    formData.append("content", content);
-    formData.append("course_id", courseId);
+    try {
+      const formData = new FormData();
+      formData.append("title", title);
+      formData.append("file", files[0]);
+      formData.append("content", content);
+      formData.append("course_id", courseId);
 
-    formData.append("max_score", maxScore.toString());
-    formData.append("total_time", (timeLimit).toString());
-    formData.append("time_start", createDate(timeStart)?.toISOString() || "");
-    formData.append("time_end", createDate(timeEnd)?.toISOString() || "");
-    formData.append("teacher_id", JSON.parse(localStorage.getItem("userData")!)._id);
+      formData.append("max_score", maxScore.toString());
+      formData.append("total_time", (timeLimit).toString());
+      formData.append("time_start", createDate(timeStart)?.toISOString() || "");
+      formData.append("time_end", createDate(timeEnd)?.toISOString() || "");
+      formData.append("teacher_id", JSON.parse(localStorage.getItem("userData")!)._id);
 
-    const res = await AxiosInstance.post("https://e-learming-be.onrender.com/essay-exam", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      }
-    }
-    )
-    if (res.status === 201) {
+      await AxiosInstance.post("https://e-learming-be.onrender.com/essay-exam", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      })
       toast.success("Successfully!")
-    }
-    else {
-      toast.error("Error from server")
+    } catch (error) {
+      handleAxiosError(error)
     }
   }
 
@@ -183,7 +180,7 @@ export default function CreateEssayPage() {
               <Grid item xs={9.5}>
                 <EditorWrapper
                   sx={{
-                    '&': { minHeight: "300px", border: "1px solid rgba(208, 212, 241, 0.16)" },
+                    '&': { minHeight: "300px", border: theme => `1px solid ${theme.palette.divider}` },
                     '& .rdw-editor-wrapper .rdw-editor-main': { px: 5 },
                     '& .rdw-editor-wrapper, & .rdw-option-wrapper': { border: 0 },
                     '& .rdw-editor-wrapper .rdw-editor-toolbar .rdw-image-modal': { transform: 'translateX(-50%)' },

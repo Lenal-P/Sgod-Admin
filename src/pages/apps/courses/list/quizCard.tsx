@@ -154,7 +154,7 @@ const CardInfluencer = (props: CardInfluencerProps) => {
               px: theme => [`${theme.spacing(5)} !important`, `${theme.spacing(15)} !important`]
             }}
           >
-            <p>{t('Are you sure you want to delete this category?')}</p>
+            <p>{t('Are you sure you want to delete?')}</p>
           </DialogContent>
           <DialogActions>
             <>

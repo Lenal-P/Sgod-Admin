@@ -205,7 +205,7 @@ export default function QuizQuestionStoreDetail() {
                               size='small'
                               component={Link}
                               sx={{ color: 'text.secondary', fontSize: 22, mx: 2 }}
-                              href={`/pages/quiz-question/detail/${quiz._id}`}
+                              href={`/apps/storeQuizQuestion/detail/${quiz._id}`}
                             >
                               <Icon icon='tabler:eye' />
                             </IconButton>
@@ -216,7 +216,7 @@ export default function QuizQuestionStoreDetail() {
                               component={Link}
                               disabled={userData._id !== idOwner}
                               sx={{ color: 'text.secondary', fontSize: 22, mx: 2 }}
-                              href={`/pages/quiz-question/update/${quiz._id}`}
+                              href={`/apps/storeQuizQuestion/update/${quiz._id}`}
                             >
                               <Icon icon='tabler:edit' />
                             </IconButton>

@@ -7,10 +7,11 @@ import {
 } from "react";
 
 // ** Next
+import { useRouter } from "next/router";
 
 // ** MUI Imports
 import { TabContext, TabList, TabListProps, TabPanel } from '@mui/lab';
-import { Box, Button, Card, CardContent, CardHeader, Divider, Grid, MenuItem, SelectChangeEvent, styled, Tab, Theme, Typography, useMediaQuery } from "@mui/material";
+import { Box, Button, Card, CardContent, Divider, Grid, MenuItem, SelectChangeEvent, styled, Tab, Theme, Typography, useMediaQuery } from "@mui/material";
 
 // ** Icon Imports
 import Icon from 'src/@core/components/icon';
@@ -33,20 +34,18 @@ import { deleteFile } from "src/services/deleteFile";
 import { uploadSingleFile } from "src/services/uploadFile";
 
 // ** Utils
+import { htmlToDraftBlocks } from "src/utils/draft";
 
 // ** Third Party Components
 import { convertToRaw, EditorState } from 'draft-js';
 import draftToHtml from 'draftjs-to-html';
 
 // ** Types
-import { IQuizStore, IState, ITab } from "../../../../types/quiz/types";
+import { IQuizStore, IState, ITab } from "src/types/quiz/types";
 
 import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
 import toast from 'react-hot-toast';
-
-import { handleAxiosError } from "src/utils/errorHandler";
 import { useTranslation } from "react-i18next";
-
 
 const TabListStyled = styled(TabList)<TabListProps>(({ theme }) => ({
   border: '0 !important',
@@ -67,7 +66,6 @@ const TabListStyled = styled(TabList)<TabListProps>(({ theme }) => ({
     color: `${theme.palette.common.white} !important`
   },
   '& .MuiTab-root': {
-    border: `1px solid ${theme.palette.divider}`,
     overflow: "unset",
     minWidth: 65,
     minHeight: 38,
@@ -96,8 +94,36 @@ const TabListStyled = styled(TabList)<TabListProps>(({ theme }) => ({
 }))
 
 
-export default function QuizCreatePage({ }) {
+
+export default function UpdateQuizPage() {
+  const router = useRouter()
+  const { t } = useTranslation()
+
+  const fetchQuizDetail = async () => {
+    const id = router.query.id
+    const res = await AxiosInstance.get(`${teacherConfig.getDetailQuizEndpoint}/${id}`)
+    const { question, answer } = res.data
+
+    setState(() => ({
+      ...res.data,
+      question: question,
+      answer: answer.map((x: ITab, i: number) => ({
+        ...x,
+        _id: i.toString(),
+        editorState: htmlToDraftBlocks(x.content),
+        content: x.content
+      }))
+    }))
+
+    setEditorQuestionStates(htmlToDraftBlocks(question))
+  }
+
+  useEffect(() => {
+    fetchQuizDetail()
+  }, [])
+
   const [isLoading, setIsLoading] = useState<boolean>(false)
+
   const urlImgStored = useRef<string[]>([])
   const [quizStore, setQuizStore] = useState<IQuizStore[]>([])
   const [editorQuestionStates, setEditorQuestionStates] = useState<EditorState>(EditorState.createEmpty());
@@ -106,11 +132,10 @@ export default function QuizCreatePage({ }) {
     level: null,
     question: null,
     answer: [
-      { _id: '0', content: null, score: 1, editorState: EditorState.createEmpty() },
-      { _id: '1', content: null, score: 0, editorState: EditorState.createEmpty() },
+      { _id: "0", content: null, score: 1, editorState: EditorState.createEmpty() },
+      { _id: "1", content: null, score: 0, editorState: EditorState.createEmpty() },
     ]
   });
-
 
   const getIdAnswer = (data: ITab[]) => {
     return data.filter(x => x.score === 1 && x._id)[0]._id
@@ -119,7 +144,7 @@ export default function QuizCreatePage({ }) {
   const [activeTab, setActiveTab] = useState<string>(getIdAnswer(state.answer))
   const hideText = useMediaQuery((theme: Theme) => theme.breakpoints.down('md'))
 
-  const handleChangeTab = (event: SyntheticEvent, value: string) => {
+  const handleChangeTab = async (event: SyntheticEvent, value: string) => {
     setActiveTab(value)
   }
 
@@ -265,7 +290,6 @@ export default function QuizCreatePage({ }) {
           borderWidth: "1px",
           borderColor: "#ccc",
           borderRadius: "0.25rem",
-          color: "#fff",
           display: "none",
           position: "absolute",
           top: 0, right: 0, transform: 'translate(25%,-25%)'
@@ -331,24 +355,24 @@ export default function QuizCreatePage({ }) {
   const handleSubmit = async () => {
     const { answer, ...rest } = state;
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const updatedAnswer: ITab[] = answer.map(({ editorState, ...rest }) => rest); // remove index
-    const updateNewData = { ...rest, answer: updatedAnswer }
+    const updatedAnswer: ITab[] = answer.map(({ _id, editorState, ...rest }) => rest); // remove index
+    const updateNewData = { ...rest, id: router.query.id, answer: updatedAnswer }
     setIsLoading(true)
     try {
-      await AxiosInstance.post("https://e-learming-be.onrender.com/quiz-question/post", updateNewData)
-      toast.success('Successfully!')
+      await AxiosInstance.put("https://e-learming-be.onrender.com/quiz-question/put", updateNewData)
+      toast.success('Cập nhật câu hỏi thành công!')
     } catch (error) {
-      handleAxiosError(error)
-      toast.error('Add Question Fail')
+      toast.error('Cập nhật câu hỏi thất bại!')
     }
     setIsLoading(false)
   }
-  const { t } = useTranslation()
 
   return (
     <>
       <Card>
-        <CardHeader variant='h4' sx={{ mb: "1.25rem", fontWeight: 500, color: 'text.secondary' }} title={`${t('Create')} ${t('Quiz Question Store')}`} />
+        <Typography variant='h4' sx={{ margin: "1.25rem", fontWeight: 500, color: 'text.secondary' }}>
+          {t('Settings')}
+        </Typography>
         <CardContent>
           <Grid container spacing={6}>
             <Grid item sm={4} xs={12}>
@@ -365,7 +389,7 @@ export default function QuizCreatePage({ }) {
                   onChange: event => handleQuestionStoreChange(event)
                 }}
               >
-                <MenuItem value="">{t('Select Quiz Question Store')}</MenuItem>
+                <MenuItem value="">{t('Chọn ngân hàng đề')}</MenuItem>
                 {quizStore.map((x, i) => {
                   return <MenuItem key={i} value={x._id}>{x.title}</MenuItem>
                 })}
@@ -383,9 +407,9 @@ export default function QuizCreatePage({ }) {
                   onChange: event => handlelevelChange(event)
                 }}
               >
-                <MenuItem value=''>{t('Choose Question Difficulty')}</MenuItem>
+                <MenuItem value=''>{t('Chọn độ khó của câu hỏi')}</MenuItem>
                 <MenuItem value='easy'>{t('Easy')}</MenuItem>
-                <MenuItem value='middle'>{t('Normal')}</MenuItem>
+                <MenuItem value='middle'>{t('Middle')}</MenuItem>
                 <MenuItem value='hard'>{t('Hard')}</MenuItem>
               </CustomTextField>
             </Grid>
@@ -399,7 +423,7 @@ export default function QuizCreatePage({ }) {
             <Divider sx={{ pt: "1.25rem", m: '0 !important' }} />
             <EditorWrapper
               sx={{
-                '&': { minHeight: "300px", border: theme => `1px solid ${theme.palette.divider}` },
+                '&': { minHeight: "300px", border: "1px solid rgba(208, 212, 241, 0.16)" },
                 '& .rdw-editor-wrapper .rdw-editor-main': { px: 5 },
                 '& .rdw-editor-wrapper, & .rdw-option-wrapper': { border: 0 },
                 '& .rdw-editor-wrapper .rdw-editor-toolbar .rdw-image-modal': { transform: 'translateX(-50%)' },
@@ -411,7 +435,7 @@ export default function QuizCreatePage({ }) {
                 wrapperClassName={`editor-question`}
                 editorState={editorQuestionStates}
                 onEditorStateChange={(contentState) => updateQuestionValue(contentState)}
-                placeholder={t('Enter Question') ?? ''}
+                placeholder={`${t('Enter Question')}`}
                 toolbar={toolbarOptions}
               />
             </EditorWrapper>
@@ -432,22 +456,7 @@ export default function QuizCreatePage({ }) {
                       <Tab sx={{ position: "relative" }}
                         className={`${x.score === 1 && "checked"}`} key={x._id} value={x._id} label={renderTabLabel(`${t('Option')} ${i + 1}`, x._id)} />
                     ))}
-                    {state.answer.length < 4 ?
-                      <Tab onClick={handleAddAnswer}
-                        value={getIdAnswer(state.answer)}
-                        className="plus"
-                        label={
-                          <Box sx={{
-                            '&': {
-                              color: "text.primary",
-                              display: 'flex',
-                              alignItems: 'center',
-                            },
-                            ...(!hideText && { '& svg': { mr: 2 } })
-                          }}>
-                            +
-                          </Box>}
-                      /> : <></>}
+                    {state.answer.length < 4 && <Tab onClick={handleAddAnswer} value={getIdAnswer(state.answer)} className="plus" label={<Box sx={{ display: 'flex', alignItems: 'center', ...(!hideText && { '& svg': { mr: 2 } }) }}>+</Box>} />}
                   </TabListStyled>
                 </Box>
               </Grid>
@@ -456,7 +465,7 @@ export default function QuizCreatePage({ }) {
                   <Divider sx={{ m: '0 !important' }} />
                   <EditorWrapper
                     sx={{
-                      '&': { minHeight: "260px", flex: "1", border: theme => `1px solid ${theme.palette.divider}` },
+                      '&': { minHeight: "260px", flex: "1", border: "1px solid rgba(208, 212, 241, 0.16)" },
                       '& .rdw-editor-wrapper .rdw-editor-main': { px: 5 },
                       '& .rdw-editor-wrapper, & .rdw-option-wrapper': { border: 0 },
                       '& .rdw-editor-wrapper .rdw-editor-toolbar .rdw-image-modal': { transform: 'translateX(-50%)' },
@@ -467,8 +476,8 @@ export default function QuizCreatePage({ }) {
                     <ReactDraftWysiwyg
                       wrapperClassName={`editor-answer`}
                       editorState={getEditorStateAnswer(state.answer)}
-                      onEditorStateChange={updateAnswerValue}
-                      placeholder={t('Enter Answer') ?? ''}
+                      onEditorStateChange={(contentState) => updateAnswerValue(contentState)}
+                      placeholder={`${t('Enter Answer')}`}
                       toolbar={toolbarOptions}
                     />
                   </EditorWrapper>
@@ -491,24 +500,18 @@ export default function QuizCreatePage({ }) {
                     onChange: event => handleAnswerCheckedChange(event)
                   }}
                 >
-                  <MenuItem disabled value=''>{t('Choose The Correct Answer')}</MenuItem>
+                  <MenuItem disabled value=''>{t('Select Correct Answer')}</MenuItem>
                   {state.answer.map((x, i) => (<MenuItem key={i} value={i}>{t('Option')} {i + 1}</MenuItem>))}
                 </CustomTextField>
               </Grid>
             </Box>
           </TabContext>
-        </Box >
-        <Grid container item sx={{ px: "1.5rem", alignItems: "center", justifyContent: "flex-end", pb: "1.5rem" }}>
-          <Box sx={{ mt: "0rem", pb: "3rem", textAlign: "right" }}>
-            <Button onClick={handleSubmit} disabled={isLoading} variant='contained'>{isLoading ? "Loading..." : t("Create")}</Button>
-          </Box>
-        </Grid>
-      </Card >
+        </Box>
+        <Box sx={{ mt: "0rem", mr: '1.5rem', pb: "3rem", textAlign: "right" }}>
+          <Button onClick={handleSubmit} disabled={isLoading} variant='contained'>{isLoading ? t("Loading...") : t("Save")}</Button>
+        </Box>
+      </Card>
     </>
   )
 }
 
-QuizCreatePage.acl = {
-  action: 'read',
-  subject: 'teacher-page'
-}

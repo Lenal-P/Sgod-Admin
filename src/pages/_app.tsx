@@ -106,16 +106,7 @@ const Guard = ({ children, authGuard, guestGuard }: GuardProps) => {
 }
 
 
-const StyledGlobal = styled(Box)<BoxProps>(() => ({
-  '& > *::-webkit-scrollbar': {
-    // background: `${theme.palette.text.primary} !important`
-    width: `30px`
-  },
-  '& > *::-webkit-scrollbar-thumb': {
-    // background: `${theme.palette.text.primary} !important`
-    background: `#ccc`
-  },
-}))
+
 
 
 
@@ -156,7 +147,7 @@ const App = (props: ExtendedAppProps) => {
                     <ThemeComponent settings={settings}>
                       <Guard authGuard={authGuard} guestGuard={guestGuard}>
                         <AclGuard aclAbilities={aclAbilities} guestGuard={guestGuard} authGuard={authGuard}>
-                          <StyledGlobal>{getLayout(<Component {...pageProps} />)}</StyledGlobal>
+                          {getLayout(<Component {...pageProps} />)}
                         </AclGuard>
                       </Guard>
                       <ReactHotToast>

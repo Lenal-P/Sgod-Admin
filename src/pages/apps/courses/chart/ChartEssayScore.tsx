@@ -120,9 +120,7 @@ const ChartScore = () => {
     ],
   };
 
-  const max = Math.max(...(chartData.data as number[]));
-  const seriesIndex = (chartData.data as number[]).indexOf(max);
-  const finalColors = colors.map((color, i) => (seriesIndex === i ? hexToRGBA(theme.palette.primary.main, 1) : color));
+  const finalColors = colors.map(() => (hexToRGBA(theme.palette.primary.main, 1)));
 
   return (
     <Card sx={{ borderRadius: '0px 0px 15px 15px' }}>

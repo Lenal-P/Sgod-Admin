@@ -26,9 +26,12 @@ import {
   TablePagination,
   TableRow,
   TextField,
-  Typography
+  Typography,
+  IconButton
 } from "@mui/material";
 
+// ** Icon Imports
+import Icon from 'src/@core/components/icon';
 
 // ** Custom Component Imports
 import CustomTextField from "src/@core/components/mui/text-field";
@@ -379,7 +382,7 @@ export default function CreateQuizOnlinePage() {
         <Box
           sx={{
             outline: "none",
-            backgroundColor: "customColors.darkPaperBg",
+            backgroundColor: "background.paper",
             position: 'absolute',
             top: '50%',
             left: '50%',
@@ -388,7 +391,7 @@ export default function CreateQuizOnlinePage() {
           }}>
           <Box
             sx={{
-              height: 600,
+              maxHeight: 520,
               overflowY: "scroll",
               overflowX: "hidden",
               px: "1rem",
@@ -404,6 +407,15 @@ export default function CreateQuizOnlinePage() {
                 background: 'transparent'
               },
             }}>
+                  <Box sx={{
+                position: 'absolute',
+                top: 0,
+                right: 0,
+              }}>
+                <IconButton onClick={handleCloseModal}>
+                <Icon icon='material-symbols:close' />
+                </IconButton>
+                </Box>
             <CardHeader sx={{ px: 0, mt: 8, mb: 4 }} title={t('Select Quiz Question Store')} />
             <CardContent sx={{ px: "1rem" }}>
               <Grid container sx={{ alignItems: "center" }} spacing={4}>

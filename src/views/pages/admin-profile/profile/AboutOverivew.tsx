@@ -73,9 +73,11 @@ const AboutOverview = () => {
   const { t } = useTranslation()
   const [editedUserData, setEditedUserData] = useState<Partial<UserDataType> | null>(null);
   const { control, handleSubmit, setValue } = useForm()
-  const [avatarUpdated, setAvatarUpdated] = useState(false);
-
   const { user, setUser } = useContext(AuthContext)
+  const [avatar, setAvatar] = useState(user?.avatar)
+  const [fileAvatar, setFileAvatar] = useState<File>()
+  const [fileError, setFileError] = useState<string | null>(null);
+  const [submitDisabled, setSubmitDisabled] = useState<boolean>(false);
 
   const handleEditClickOpen = () => {
     setOpenEdit(true)
@@ -89,8 +91,11 @@ const AboutOverview = () => {
     setOpenEdit(false)
   }
 
-  const uploadAvatar = async (file: File) => {
+  const uploadAvatar = async (file: File | undefined) => {
     try {
+      if (!file) {
+        return;
+      }
       const formData = new FormData()
 
       formData.append('file', file);
@@ -101,8 +106,6 @@ const AboutOverview = () => {
           'Content-Type': 'multipart/form-data',
         }
       })
-
-      setAvatarUpdated(true);
     } catch (error: any) {
       if (error && error.response) {
         toast.error(error.response.data.message)
@@ -112,32 +115,37 @@ const AboutOverview = () => {
 
   const handleChooseFile = async () => {
     try {
-      const fileInput = document.createElement('input')
-      fileInput.type = 'file'
-      fileInput.accept = 'image/*'
-      fileInput.click()
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.accept = '.jpg, .jpeg, .png'; // Chỉ chấp nhận các định dạng hình ảnh này
+      fileInput.click();
       fileInput.addEventListener('change', async event => {
-        const target = event.target as HTMLInputElement
-        const file = target.files?.[0]
+        const target = event.target as HTMLInputElement;
+        const file = target.files?.[0];
         if (file) {
-          const reader = new FileReader();
-          reader.onload = (event) => {
-            const binaryString = event.target?.result as string;
-            setEditedUserData(prevUserData => ({
-              ...prevUserData!,
-              avatar: binaryString
-            }));
-            setValue('avatar', binaryString);
-          };
-          reader.readAsDataURL(file);
-          await uploadAvatar(file)
+          if (!file.type.startsWith('image/')) {
+            setFileError('Invalid file type. Please choose an image file.');
+            setSubmitDisabled(true); // Disable nút Submit
+          } else if (!['image/jpeg', 'image/png'].includes(file.type)) {
+            setFileError('Unsupported file type. Please choose a .jpg, .jpeg, .png file.');
+          } else {
+            setFileError(null); // Reset fileError nếu loại file hợp lệ
+            setSubmitDisabled(false); // Enable nút Submit
+            const reader = new FileReader();
+            reader.onload = (event) => {
+              const binaryString = event.target?.result as string;
+              setValue('avatar', binaryString);
+              setAvatar(binaryString);
+              setFileAvatar(file);
+            };
+            reader.readAsDataURL(file);
+          }
         }
-      })
+      });
     } catch (error) {
-      console.error('Error choosing file:', error)
+      console.error('Error choosing file:', error);
     }
-  }
-
+  };
 
   const updateUserProfile = async (data: any) => {
     const filteredData = {
@@ -149,15 +157,19 @@ const AboutOverview = () => {
       phone_number: data.phone_number,
       username: data.username
     };
+
     try {
-      await AxiosInstance.put(`${adminPathName.putAdminEndpoint}`, filteredData);
-      toast.success('Update Successfully')
+      await Promise.all([
+        AxiosInstance.put(`${adminPathName.putAdminEndpoint}`, filteredData),
+        uploadAvatar(fileAvatar)
+      ]);
+
+      toast.success('Update Successfully');
     } catch (error: any) {
       if (error && error.response) {
-        toast.error(error.response.data.message)
+        toast.error(error.response.data.message);
       }
     }
-
   }
 
   const onSubmit = async (data: any) => {
@@ -176,16 +188,12 @@ const AboutOverview = () => {
           ...data,
           ...updatedBirthday
         } as UserDataType;
-        if (avatarUpdated) {
-          toast.success('Avatar changed successfully!');
-        }
+        await updateUserProfile(updatedUser)
 
         // Reset state
-        setAvatarUpdated(false);
         setUser(updatedUser)
         handleEditClose()
         localStorage.setItem('userData', JSON.stringify(updatedUser))
-        await updateUserProfile(updatedUser)
 
       } catch (error: any) {
         if (error && error.response) {
@@ -338,6 +346,70 @@ const AboutOverview = () => {
               </DialogContentText>
               <form onSubmit={handleSubmit(onSubmit)}>
                 <Grid container spacing={8}>
+                  <Grid item xs={12}>
+                    <Controller
+                      name='avatar'
+                      control={control}
+                      defaultValue={user?.avatar || ''}
+                      render={() => (
+                        <Grid
+                          container
+                          alignItems='center'
+                          justifyContent='center'
+                          sx={{ display: 'flex', flexDirection: 'column', mb: 5 }}
+                        >
+                          <Grid item sx={{ width: 100, height: 100, position: 'relative' }}>
+                            {user?.avatar ? (
+                              <img
+                                src={avatar}
+                                alt="Avatar"
+                                style={{
+                                  width: '100%',
+                                  height: '100%',
+                                  objectFit: 'cover',
+                                  borderRadius: '50%',
+                                  border: '1px solid #ccc',
+                                  marginBottom: '10px',
+                                }}
+                              />
+                            ) : (
+                              <div
+                                style={{
+                                  width: '100%',
+                                  height: '100%',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  backgroundColor: '#f0f0f0',
+                                  borderRadius: '50%',
+                                  border: '1px solid #ccc',
+                                  marginBottom: '10px',
+                                }}
+                              >
+                                <Typography variant="caption">{t('No Avatar')}</Typography>
+                              </div>
+                            )}
+                            <Grid item onClick={handleChooseFile} sx={{ position: 'absolute', top: "70%", right: 0 }}>
+                              <ButtonsFab />
+                            </Grid>
+                            {fileError && (
+                              <Typography variant="body2" sx={{
+                                position: 'fixed',
+                                color: 'red',
+                                width: '100%',
+                                textAlign: 'center',
+                                top: "40%",
+                                left: 0,
+                                zIndex: 9999
+                              }}>
+                                {fileError}
+                              </Typography>
+                            )}
+                          </Grid>
+                        </Grid>
+                      )}
+                    />
+                  </Grid>
                   <Grid item xs={12} sm={6}>
                     <Controller
                       name='first_name'
@@ -439,39 +511,6 @@ const AboutOverview = () => {
                       )}
                     />
                   </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Controller
-                      name='avatar'
-                      control={control}
-                      defaultValue={user?.avatar || ''}
-                      render={({ field }) => (
-                        <Grid
-                          container
-                          alignItems='end'
-                          spacing={2}
-                          sx={{ display: 'flex', gap: 1 }}
-                        >
-                          <Grid item sx={{ position: 'relative', flex: 1 }} >
-                            <TextField
-                              fullWidth
-                              label={t('Avatar')}
-                              placeholder='/images/'
-                              value={field.value}
-                              onChange={e => {
-                                field.onChange(e)
-                                setValue('avatar', e.target.value)
-                              }}
-                            />
-                            <Grid item className='buttonAvatar' onClick={handleChooseFile}
-                              sx={{ position: 'absolute', top: 17, right: 0 }}
-                            >
-                              <ButtonsFab />
-                            </Grid>
-                          </Grid>
-                        </Grid>
-                      )}
-                    />
-                  </Grid>
                 </Grid>
                 <DialogActions
                   sx={{
@@ -482,7 +521,7 @@ const AboutOverview = () => {
                     pb: theme => [`${theme.spacing(8)} !important`, `${theme.spacing(12.5)} !important`]
                   }}
                 >
-                  <Button variant='contained' type='submit'>
+                  <Button variant="contained" type="submit" disabled={submitDisabled}>
                     {t('Submit')}
                   </Button>
                   <Button variant='tonal' color='secondary' onClick={handleEditClose}>

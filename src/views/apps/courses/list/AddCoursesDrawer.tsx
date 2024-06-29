@@ -9,7 +9,6 @@ import IconButton from '@mui/material/IconButton'
 import Typography from '@mui/material/Typography'
 import Box, { BoxProps } from '@mui/material/Box'
 import TextField from '@mui/material/TextField'
-import Grid from '@mui/material/Grid'
 
 // ** Third Party Imports
 import { useForm, Controller } from 'react-hook-form'
@@ -23,7 +22,6 @@ import Icon from 'src/@core/components/icon'
 import AxiosInstance from 'src/configs/axios'
 import adminPathName from 'src/configs/endpoints/admin';
 import { Category, Courses } from 'src/context/types'
-import ButtonsFab from 'src/views/pages/admin-profile/components/ButtonsFab'
 import { MenuItem } from '@mui/material'
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 
@@ -37,8 +35,7 @@ const Header = styled(Box)<BoxProps>(({ theme }) => ({
 
 const SidebarAddCourses = (props: any) => {
   const { open, toggle, fetchDataList } = props;
-  const { control, handleSubmit, setValue } = useForm()
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const { control, handleSubmit } = useForm()
   const [categories, setCategories] = useState<Category[]>([])
 
   useEffect(() => {
@@ -60,12 +57,12 @@ const SidebarAddCourses = (props: any) => {
     fetchCategories()
   }, [])
 
-  const createCourses = async (data: Courses, file: File) => {
+  const createCourses = async (data: Courses) => {
     try {
       const formData = new FormData();
 
       // Thêm dữ liệu của file vào formData
-      formData.append('file', file);
+      formData.append('file', '/placeholder-image.jpg');
 
       // Thêm dữ liệu của category vào formData
       formData.append('name', data.name);
@@ -88,39 +85,11 @@ const SidebarAddCourses = (props: any) => {
   };
 
   const onSubmit = async (data: any) => {
-    if (selectedFile) {
-      createCourses(data, selectedFile);
-    } else {
-      toast.error('Please select an icon file');
-    }
+    createCourses(data);
   };
 
   const handleClose = () => {
     toggle();
-  };
-
-  const handleChooseFile = async () => {
-    try {
-      const fileInput = document.createElement('input');
-      fileInput.type = 'file';
-      fileInput.accept = 'image/*';
-      fileInput.click();
-      fileInput.addEventListener('change', async event => {
-        const target = event.target as HTMLInputElement;
-        const file = target.files?.[0];
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = (event) => {
-            const binaryString = event.target?.result as string;
-            setValue('icon', binaryString);
-            setSelectedFile(file);
-          };
-          reader.readAsDataURL(file);
-        }
-      });
-    } catch (error) {
-      console.error('Error choosing file:', error);
-    }
   };
 
   const { t } = useTranslation()
@@ -155,35 +124,6 @@ const SidebarAddCourses = (props: any) => {
                 onChange={onChange}
                 placeholder='Courses Name'
               />
-            )}
-          />
-          <Controller
-            name='icon'
-            control={control}
-            render={({ field }) => (
-              <Grid
-                container
-                alignItems='end'
-                spacing={2}
-                sx={{ display: 'flex', gap: 1, mb: 8 }}
-              >
-                <Grid item sx={{ position: 'relative', flex: 1 }} >
-                  <TextField
-                    fullWidth
-                    placeholder='Icon'
-                    defaultValue={field.value}
-                    value={field.value}
-                    onChange={e => {
-                      setValue('icon', e.target.value)
-                    }}
-                  />
-                  <Grid item className='buttonAvatar' onClick={handleChooseFile}
-                    sx={{ position: 'absolute', top: '1.05rem', right: 3 }}
-                  >
-                    <ButtonsFab />
-                  </Grid>
-                </Grid>
-              </Grid>
             )}
           />
           <Controller

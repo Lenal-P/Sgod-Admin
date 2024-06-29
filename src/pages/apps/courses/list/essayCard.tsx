@@ -97,6 +97,14 @@ const CardInfluencer = (props: CardInfluencerProps) => {
                   variant='contained'
                   sx={{ py: 2, width: '100%', mr: 0 }}
                   disabled={userData._id !== essay.exam.teacher_id}
+                  onClick={() => {
+                    dispatch(updateData(
+                      {
+                        title: `${essay.exam.title}`,
+                        url: `/apps/essay/update/${essay.exam._id}`
+                      }
+                    ))
+                  }}
                 >
                   <Icon icon='tabler:edit' fontSize={20}>{t('Edit')}</Icon>
                 </Button>
@@ -151,7 +159,7 @@ const CardInfluencer = (props: CardInfluencerProps) => {
               px: theme => [`${theme.spacing(5)} !important`, `${theme.spacing(15)} !important`]
             }}
           >
-            <p>{t('Are you sure you want to delete this category?')}</p>
+            <p>{t('Are you sure you want to delete?')}</p>
           </DialogContent>
           <DialogActions>
             <>

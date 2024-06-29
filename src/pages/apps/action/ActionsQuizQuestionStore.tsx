@@ -139,7 +139,7 @@ const Actions: React.FC<DeleteUserProps & { fetchDataList: () => void }> = ({ ro
             pt: theme => [`${theme.spacing(8)} !important`, `${theme.spacing(12.5)} !important`]
           }}
         >
-          {t('Edit User Information')}
+          {t('Edit Quiz Question')}
           <IconButton
             size='small'
             onClick={() => setIsEditDialogOpen(false)}
@@ -191,6 +191,7 @@ const Actions: React.FC<DeleteUserProps & { fetchDataList: () => void }> = ({ ro
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth sx={{ marginTop: 2 }}>
                   <Select
+                    defaultValue={row.is_share}
                     value={editedData?.is_share || false}
                     onChange={(e) => {
                       setEditedData(prev => ({
@@ -272,7 +273,7 @@ const Actions: React.FC<DeleteUserProps & { fetchDataList: () => void }> = ({ ro
             px: theme => [`${theme.spacing(5)} !important`, `${theme.spacing(15)} !important`]
           }}
         >
-          <p>{t('Are you sure you want to delete this category?')}</p>
+          <p>{t('Are you sure you want to delete?')}</p>
         </DialogContent>
         <DialogActions>
           <>

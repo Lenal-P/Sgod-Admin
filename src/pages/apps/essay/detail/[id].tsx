@@ -14,9 +14,8 @@ import Icon from 'src/@core/components/icon';
 
 // ** Third Party Imports
 import { EditorState } from 'draft-js';
-import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
-
 import { CSVLink } from 'react-csv';
+import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
 
 // ** Styled Component Imports
 import ReactDraftWysiwyg from "src/@core/components/react-draft-wysiwyg";
@@ -38,19 +37,19 @@ import AxiosInstance from "src/configs/axios";
 import { htmlToDraftBlocks } from "src/utils/draft";
 
 // ** Next
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 import Link from "next/link";
 import { useRouter } from "next/router";
-import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import adminPathName from 'src/configs/endpoints/admin';
 import { EssayData } from "src/context/types";
+import { updateData } from 'src/store/apps/breadcrumbs';
 import { ICourse } from "src/types/quiz/types";
 import { TimeState } from "src/types/timeTypes";
+import { handleAxiosError } from "src/utils/errorHandler";
 import TableHeaderBreadcrumb from "src/views/apps/courses/list/TableHeaderBreadcrumb";
 import ChartEssayScore from '../../courses/chart/ChartEssayScore';
-import { updateData } from 'src/store/apps/breadcrumbs'
-
-
 
 interface EssayExam {
   _id: string;
@@ -101,8 +100,6 @@ export default function EssayDetail() {
     setValue(newValue)
   }
 
-
-
   const [timeStart, setTimeStart] = useState<TimeState>({
     days: new Date().getDate(),
     months: new Date().getMonth() + 1,
@@ -135,41 +132,6 @@ export default function EssayDetail() {
     }))
   }
 
-  useEffect(() => {
-    const fetchQuizStore = async () => {
-      const res = await AxiosInstance.get(`${teacherConfig.getAllCourse}`)
-      const result: ICourse[] = res.data
-
-      setCourseList(result)
-    }
-    fetchQuizStore()
-  }, []);
-
-  useEffect(() => {
-    const fetchQuizStore = async () => {
-      const res = await AxiosInstance.get(`${teacherConfig.getExamDetail}/${router.query.id}`)
-      const result = res.data.data.data
-
-      setEditorState(htmlToDraftBlocks(result.content))
-      setState(result)
-      setTimeStart({
-        days: new Date(result.time_start).getDate(),
-        months: new Date(result.time_start).getMonth() + 1,
-        years: new Date(result.time_start).getFullYear(),
-        hours: new Date(result.time_start).getHours(),
-        minutes: new Date(result.time_start).getMinutes()
-      })
-      setTimeEnd({
-        days: new Date(result.time_end).getDate(),
-        months: new Date(result.time_end).getMonth() + 1,
-        years: new Date(result.time_end).getFullYear(),
-        hours: new Date(result.time_end).getHours(),
-        minutes: new Date(result.time_end).getMinutes()
-      })
-    }
-    fetchQuizStore()
-  }, []);
-
 
   const user = localStorage.getItem('userData')
   const userData = user ? JSON.parse(user) : null
@@ -178,24 +140,64 @@ export default function EssayDetail() {
   const [dataList, setDataList] = useState<EssayData[]>([]);
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 70 });
 
-  const fetchDataList = async () => {
-    try {
-      const response = await AxiosInstance.get(`${adminPathName.getIdEssayExamEndpoint}/${router.query.id}`);
-      const essayData = response.data.map((x: any) => ({
-        student_name: x.student_name,
-        score: x.score,
-        data: x.data
-      }))
-      setDataList(essayData);
-    } catch (error: any) {
-      if (error) {
-        toast.error(error.response.data.message)
+  useEffect(() => {
+    const fetchDataList = async () => {
+      try {
+        const response = await AxiosInstance.get(`${adminPathName.getIdEssayExamEndpoint}/${router.query.id}`);
+
+        console.log("🚀 ~ fetchDataList ~ response:", response)
+        const essayData = response.data.map((x: any) => ({
+          student_name: x.student_name,
+          score: x.score,
+          data: x.data
+        }))
+        setDataList(essayData);
+      } catch (error) {
+        handleAxiosError(error)
+      }
+    };
+
+    const fetchEssayDetail = async () => {
+      try {
+        const res = await AxiosInstance.get(`${teacherConfig.getExamDetail}/${router.query.id}`)
+        const result = res.data.data.data
+
+        setEditorState(htmlToDraftBlocks(result.content))
+        setState(result)
+        setTimeStart({
+          days: new Date(result.time_start).getDate(),
+          months: new Date(result.time_start).getMonth() + 1,
+          years: new Date(result.time_start).getFullYear(),
+          hours: new Date(result.time_start).getHours(),
+          minutes: new Date(result.time_start).getMinutes()
+        })
+        setTimeEnd({
+          days: new Date(result.time_end).getDate(),
+          months: new Date(result.time_end).getMonth() + 1,
+          years: new Date(result.time_end).getFullYear(),
+          hours: new Date(result.time_end).getHours(),
+          minutes: new Date(result.time_end).getMinutes()
+        })
+      } catch (error) {
+        handleAxiosError(error)
       }
     }
-  };
 
-  useEffect(() => {
+    const fetchCourseStore = async () => {
+      try {
+        const res = await AxiosInstance.get(`${teacherConfig.getAllCourse}`)
+        const result: ICourse[] = res.data
+
+        setCourseList(result)
+      } catch (error) {
+        handleAxiosError(error)
+      }
+    }
+
     fetchDataList();
+    fetchEssayDetail()
+    fetchCourseStore()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleChangePage = (
@@ -213,11 +215,53 @@ export default function EssayDetail() {
 
   const generateCsvData = () => {
     return dataList.map(essay => ({
-      student_name: essay.student_name,
-      status: essay.data.status,
-      time_start: essay.data.createAt?.toString().slice(0, 19).replace("T", " "),
-      time_out: essay.data.time_out?.toString().slice(0, 19).replace("T", " "),
+      Student: essay.student_name,
+      Status: essay.data.status,
+      Time_Start: essay.data.createAt?.toString().slice(0, 19).replace("T", " "),
+      Time_Out: essay.data.time_out?.toString().slice(0, 19).replace("T", " "),
+      Score: essay.score
     }));
+  };
+
+  const generatePdfContent = () => {
+    const doc = new jsPDF() as any; // Type assertion might be necessary here
+    const totalPages = doc.internal.getNumberOfPages(); // Get total number of pages
+
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i); // Set current page
+      doc.setFontSize(12);
+
+      // Add title "List Scores" at the top
+      doc.text(t("List Scores"), 105, 10, null, null, 'center');
+
+      // Add content to each page
+      if (dataList && dataList.length > 0) {
+        doc.autoTable({
+          head: [['Full Name', 'Status', 'Time Start', 'Time Out', 'Score']],
+          body: dataList.map(essay => [
+            essay.student_name,
+            essay.data.status,
+            essay.data.createAt?.toString().slice(11, 19) + ('\n') + essay.data.createAt?.toString().slice(0, 10),
+            essay.data.time_out.toString().slice(11, 19) + ('\n') + essay.data.time_out.toString().slice(0, 10),
+            essay.score ? essay.score : t('Not Mark Yet')
+          ]),
+          startY: 20
+        });
+        const signatureText = t("Teacher");
+        const signatureX = doc.internal.pageSize.width - 30;
+        const signatureY = doc.autoTable.previous.finalY + 15;
+        doc.text(signatureText, signatureX, signatureY, null, null, 'right');
+      } else {
+        doc.text(t("No rows"));
+      }
+    }
+
+    return doc;
+  };
+
+  const exportPDF = () => {
+    const doc = generatePdfContent();
+    doc.save(`essay_scores_${router.query.id}.pdf`);
   };
 
   return (
@@ -251,7 +295,7 @@ export default function EssayDetail() {
                   <Grid item xs={9.5}>
                     <EditorWrapper
                       sx={{
-                        '&': { minHeight: "300px", border: "1px solid rgba(208, 212, 241, 0.16)" },
+                        '&': { minHeight: "300px", border: theme => `1px solid ${theme.palette.divider}` },
                         '& .rdw-editor-wrapper .rdw-editor-main': { px: 5 },
                         '& .rdw-editor-wrapper, & .rdw-option-wrapper': { border: 0 },
                         '& .rdw-editor-wrapper .rdw-editor-toolbar .rdw-image-modal': { transform: 'translateX(-50%)' },
@@ -414,7 +458,7 @@ export default function EssayDetail() {
                           event.stopPropagation()
                           window.open(state.files[0]);
                         }} sx={{ color: theme => `${theme.palette.text.primary}`, }}>
-                          {state.files[0]}
+                          {state.files[0] || "No file selected"}
                         </Box>
                       </Box>
                     </DropzoneWrapper>
@@ -467,10 +511,13 @@ export default function EssayDetail() {
                     className="btn btn-primary"
                   >
                     <Button
-                      variant='contained'>
+                      variant='contained' disabled={!dataList || dataList.length === 0}>
                       {t('Export')} {t('CSV')}
                     </Button>
                   </CSVLink>
+                  <Button variant='contained' onClick={exportPDF} disabled={!dataList || dataList.length === 0}>
+                    {t('Export')} {t('PDF')}
+                  </Button>
                 </Box>
                 {/* Existing table content */}
                 {dataList && dataList.length ? (

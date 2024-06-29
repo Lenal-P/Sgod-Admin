@@ -22,6 +22,10 @@ module.exports = {
         protocol: 'https',
         hostname: 'kahoot.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'static.vecteezy.com',
+      },
     ],
   },
 }

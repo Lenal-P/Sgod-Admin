@@ -25,10 +25,17 @@ import {
   TableRow,
   TextField,
   Tooltip,
-  Typography
+  Typography,
+  IconButton
 } from "@mui/material";
 
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+
+// ** Icon Imports
+import Icon from 'src/@core/components/icon';
+
+import toast from "react-hot-toast";
+import { handleAxiosError } from "src/utils/errorHandler";
 
 // ** Custom Component Imports
 import CustomTextField from "src/@core/components/mui/text-field";
@@ -195,30 +202,7 @@ export default function CreateEssayPage() {
     }
   }
 
-  async function handleSubmit() {
-    const data = {
-      teacher_id: quizDetail.teacher_id,
-      title: quizDetail.title,
-      course_id: quizDetail.course_id,
-      total_question_easy: quizDetail.total_question_easy,
-      total_question_middle: quizDetail.total_question_middle,
-      total_question_hard: quizDetail.total_question_hard,
-      total_time: quizDetail.total_time,
-      max_score: quizDetail.max_score,
-      time_begin: timeStart ? createDate(timeStart).toISOString() : null,
-      time_end: timeEnd ? createDate(timeEnd).toISOString() : null,
-      list_questions: listDetailQuestion.map((x: any) => x._id),
-    }
-    console.log(data)
-    try {
-      const res = await AxiosInstance.put("https://e-learming-be.onrender.com/quiz/put", data)
-      console.log(res)
 
-    } catch (error) {
-      console.log(error)
-    }
-
-  }
 
 
   function handleChangeTitle(event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void {
@@ -272,7 +256,32 @@ export default function CreateEssayPage() {
 
     }
     fetchData()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  async function handleSubmit() {
+    const data = {
+      id: router.query.id,
+      title: quizDetail.title,
+      course_id: quizDetail.course_id,
+      total_question_easy: quizDetail.total_question_easy,
+      total_question_middle: quizDetail.total_question_middle,
+      total_question_hard: quizDetail.total_question_hard,
+      total_time: quizDetail.total_time,
+      max_score: quizDetail.max_score,
+      time_begin: timeStart ? createDate(timeStart).toISOString() : null,
+      time_end: timeEnd ? createDate(timeEnd).toISOString() : null,
+      list_questions: listDetailQuestion.map((x: any) => x._id),
+    }
+    try {
+      await AxiosInstance.put("https://e-learming-be.onrender.com/quiz/put", data)
+      toast.success("Update successfully!")
+
+    } catch (error) {
+      handleAxiosError(error)
+    }
+
+  }
 
   return (
     <>
@@ -583,7 +592,7 @@ export default function CreateEssayPage() {
         <Box
           sx={{
             outline: "none",
-            backgroundColor: "customColors.darkPaperBg",
+            backgroundColor: "background.paper",
             position: 'absolute',
             top: '50%',
             left: '50%',
@@ -608,6 +617,15 @@ export default function CreateEssayPage() {
                 background: 'transparent'
               },
             }}>
+            <Box sx={{
+              position: 'absolute',
+              top: 0,
+              right: 0,
+            }}>
+              <IconButton onClick={handleCloseModal}>
+                <Icon icon='material-symbols:close' />
+              </IconButton>
+            </Box>
             <CardHeader sx={{ px: 0, mt: 8, mb: 4 }} title={t('Select Quiz Question Store')} />
             <CardContent sx={{ px: "1rem" }}>
               <Grid container sx={{ alignItems: "center" }} spacing={4}>
