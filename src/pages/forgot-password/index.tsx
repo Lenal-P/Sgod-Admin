@@ -1,5 +1,5 @@
 // ** React Imports
-import { ReactNode, useContext, useEffect, useState } from 'react'
+import { ReactNode, useState } from 'react'
 
 // ** Next Import
 import Link from 'next/link'
@@ -68,6 +68,7 @@ const LinkStyled = styled(Link)(({ theme }) => ({
 const ForgotPassword = () => {
   // ** Hooks
   const theme = useTheme()
+
   // const [email, setEmail] = useState('')
   // const [otp, setOtp] = useState('')
   // const [newPassword, setNewPassword] = useState('')

@@ -23,9 +23,6 @@ import 'src/configs/i18n'
 import { defaultACLObj } from 'src/configs/acl'
 import themeConfig from 'src/configs/themeConfig'
 
-// ** Fake-DB Import
-import 'src/@fake-db'
-
 // ** Third Party Import
 import { Toaster } from 'react-hot-toast'
 
@@ -50,7 +47,6 @@ import ReactHotToast from 'src/@core/styles/libs/react-hot-toast'
 
 // ** Utils Imports
 import { createEmotionCache } from 'src/@core/utils/create-emotion-cache'
-import { styled } from '@mui/material/styles'
 
 // ** Prismjs Styles
 import 'prismjs'
@@ -65,8 +61,6 @@ import 'src/iconify-bundle/icons-bundle-react'
 
 // ** Global css styles
 import '../../styles/globals.css'
-import { Box, BoxProps } from '@mui/system'
-
 
 // ** Extend App Props with Emotion
 type ExtendedAppProps = AppProps & {
